@@ -1,4 +1,4 @@
-# neural-network-for-ODE
+# Neural-network-for-ODE
 
 Inspired by the methods mentioned in paper [1] and [2], I tested here two examples, the simple pendulum and the revisited JMAK model.
 
