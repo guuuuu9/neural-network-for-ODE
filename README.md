@@ -1,6 +1,6 @@
 # neural-network-for-ODE
 
-Inspired by the method mentioned in paper [1] and [2], I tested here two examples, the simple pendulum and the revisited JMAK model.
+Inspired by the methods mentioned in paper [1] and [2], I tested here two examples, the simple pendulum and the revisited JMAK model.
 
 In both examples, I generate firstly the datasets via code data.py und save them in folder "output". result.py shows how the whole error changes with different hyperparameters.
 
