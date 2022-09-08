@@ -14,7 +14,7 @@ def setup_seed(seed):
      np.random.seed(seed)
      random.seed(seed)
      torch.backends.cudnn.deterministic = True
-setup_seed(3)
+setup_seed(4)
 
 def ode_solve(z0, t0, t1, f):
     """
@@ -172,10 +172,15 @@ class LinearODEF(ODEF):
 if __name__ == '__main__':
     # writer = SummaryWriter('./logstrain2')
     ode_trained = NeuralODE(LinearODEF())
+    # def del_tensor_ele_n(arr, index, n):
+    #     arr1 = arr[0:index,:]
+    #     arr2 = arr[index+n:,:]
+    #     return torch.cat((arr1,arr2),dim=0)
+
     def create_batch(X, t):
-        index_np = np.arange(0, 300, 1)
+        index_np = np.arange(0, 240, 1)
         index_np = np.hstack([index_np[:, None]])
-        t0 = np.random.uniform(0, 29.99 - 5.0)
+        t0 = np.random.uniform(0, 23.99 - 5.0)
         t1 = t0 + np.random.uniform(1.0, 5.0)
         t_copy = t.numpy()
         idx = sorted(index_np[(t_copy > t0) & (t_copy < t1)][:15])
@@ -208,13 +213,21 @@ if __name__ == '__main__':
     x2 = torch.tensor(traini['x2'].values).unsqueeze(1)
     training_data = torch.cat((t, x1, x2), 1)
     t, X = torch.split(training_data, [1,2], dim=1)
-    X = X.type(torch.float32) # 0.032761890441179276
+    X = X.type(torch.float32) # 0.032761890441179276 (300,2)
     # X = X + torch.randn_like(X) * 0.01 # 0.03739318251609802 0.03764960542321205
     # X = X + torch.randn_like(X) * 0.02 # 0.04622281715273857 0.05198590084910393
     # X = X + torch.randn_like(X) * 0.03 # 0.059001293033361435 0.07005573064088821
-    t = t.type(torch.float32)
+    t = t.type(torch.float32) #(300,1)
+
+    # d = random.randint(0,240)
+    X_train = X[0:240]
+    t_train = t[0:240]
+
     for _ in range(800):             
-        batch_targets, batch_t = create_batch(X, t)
+        batch_targets, batch_t = create_batch(X_train, t_train)
+        # if batch_targets == torch.Size([]) or batch_t == torch.Size([]):
+        #     break
+        # else:
         X0 = Variable(batch_targets[0])
         pred = ode_trained(X0, batch_t, return_whole_sequence=True)
         loss_f = nn.MSELoss()
