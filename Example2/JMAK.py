@@ -17,25 +17,25 @@ def setup_seed(seed):
      torch.backends.cudnn.deterministic = True
 setup_seed(1)
 
-def ode_solve(z0, t0, t1, f):
-    """
-    RK4
-    """
-    h = t1 - t0
-    k1 = f(z0, t0)
-    k2 = f(z0 + k1 * h / 2., t0 + h / 2.)
-    k3 = f(z0 + k2 * h / 2., t0 + h / 2.)
-    k4 = f(z0 + k3 * h, t0 + h)
-    z = z0 + (h / 6.) * (k1 + 2*k2 + 2*k3 + k4)    
-    return z
-
 # def ode_solve(z0, t0, t1, f):
 #     """
-#     Simplest Euler ODE initial value solver
+#     RK4
 #     """
-#     z = z0
-#     z = z + (t1-t0) * f(z, t0)
+#     h = t1 - t0
+#     k1 = f(z0, t0)
+#     k2 = f(z0 + k1 * h / 2., t0 + h / 2.)
+#     k3 = f(z0 + k2 * h / 2., t0 + h / 2.)
+#     k4 = f(z0 + k3 * h, t0 + h)
+#     z = z0 + (h / 6.) * (k1 + 2*k2 + 2*k3 + k4)    
 #     return z
+
+def ode_solve(z0, t0, t1, f):
+    """
+    Simplest Euler ODE initial value solver
+    """
+    z = z0
+    z = z + (t1-t0) * f(z, t0)
+    return z
 
 class ODEF(nn.Module):
     def forward_with_grad(self, z, t, grad_outputs):
@@ -172,24 +172,28 @@ class LinearODEF(ODEF):
         super(LinearODEF, self).__init__()
         self.layer1 = nn.Linear(4, 8)
         self.layer2 = nn.Tanh()
-        self.layer3 = nn.Linear(8, 4)
+        self.layer3 = nn.Linear(8, 8)
+        self.layer4 = nn.Tanh()
+        self.layer5 = nn.Linear(8, 4)
 
     def forward(self, x, t):
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
+        x = self.layer4(x)
+        x = self.layer5(x)
         return x
 
 if __name__ == '__main__':
     # writer = SummaryWriter('./logstrain')
     ode_trained = NeuralODE(LinearODEF())
     def create_batch(X, t):
-        index_np = np.arange(0, 500, 1)
+        index_np = np.arange(0, 450, 1)
         index_np = np.hstack([index_np[:, None]])
-        t0 = np.random.uniform(0, 0.99-0.2)
-        t1 = t0 + 0.2
+        t0 = np.random.uniform(0, 0.89-0.1)
+        t1 = t0 + 0.1
         t_copy = t.numpy()
-        idx = sorted(index_np[(t_copy > t0) & (t_copy < t1)][:50])
+        idx = sorted(index_np[(t_copy > t0) & (t_copy < t1)][:30])
         X = X.unsqueeze(1)
         t = t.unsqueeze(1)
         batch_targets = X[idx]
@@ -220,15 +224,17 @@ if __name__ == '__main__':
     x4 = torch.tensor(train['x4'].values).unsqueeze(1)
     training_data = torch.cat((t, x1, x2, x3, x4), 1)
     t, X = torch.split(training_data, [1,4], dim=1)
-    X = X.type(torch.float32) # 0.001168619142845273 800
-    # X = X + torch.randn_like(X) * 0.001 # 0.002405792474746704 800
-    # X = X + torch.randn_like(X) * 0.005 # 0.0009963831398636103 2000
-    # X = X + torch.randn_like(X) * 0.01 # 0.0008331441786140203 2000
-    # X = X + torch.randn_like(X) * 0.02 # 0.0035438223276287317 2000
-    # X = X + torch.randn_like(X) * 0.03 # 0.007746364455670118 2000
-    t = t.type(torch.float32)
+    X = X.type(torch.float32) # 0.00045012799091637135 #(500,4)
+    # X = X + torch.randn_like(X) * 0.001 # 0.0010698663536459208
+    # X = X + torch.randn_like(X) * 0.005 # 0.004634083714336157
+    # X = X + torch.randn_like(X) * 0.01 # 0.004985711071640253
+    # X = X + torch.randn_like(X) * 0.02 # 0.008763163350522518
+    # X = X + torch.randn_like(X) * 0.03 # 0.01350489817559719
+    t = t.type(torch.float32) #(500,1)
+    X_train = X[0:450]
+    t_train = t[0:450]
     for _ in range(2000):             
-        batch_targets, batch_t = create_batch(X, t)
+        batch_targets, batch_t = create_batch(X_train, t_train)
         X0 = Variable(batch_targets[0])
         pred = ode_trained(X0, batch_t, return_whole_sequence=True)
         loss_f = nn.MSELoss()

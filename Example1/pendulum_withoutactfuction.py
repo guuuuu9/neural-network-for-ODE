@@ -14,7 +14,7 @@ def setup_seed(seed):
      np.random.seed(seed)
      random.seed(seed)
      torch.backends.cudnn.deterministic = True
-setup_seed(4)
+setup_seed(17)
 
 def ode_solve(z0, t0, t1, f):
     """
@@ -161,8 +161,8 @@ class NeuralODE(nn.Module):
 class LinearODEF(ODEF):
     def __init__(self):
         super(LinearODEF, self).__init__()
-        self.layer1 = nn.Linear(2, 4)
-        self.layer2 = nn.Linear(4, 2)
+        self.layer1 = nn.Linear(2, 2)
+        self.layer2 = nn.Linear(2, 2)
         
     def forward(self, x, t):
         x = self.layer1(x)
@@ -213,10 +213,10 @@ if __name__ == '__main__':
     x2 = torch.tensor(traini['x2'].values).unsqueeze(1)
     training_data = torch.cat((t, x1, x2), 1)
     t, X = torch.split(training_data, [1,2], dim=1)
-    X = X.type(torch.float32) # 0.032761890441179276 (300,2)
-    # X = X + torch.randn_like(X) * 0.01 # 0.03739318251609802 0.03764960542321205
-    # X = X + torch.randn_like(X) * 0.02 # 0.04622281715273857 0.05198590084910393
-    # X = X + torch.randn_like(X) * 0.03 # 0.059001293033361435 0.07005573064088821
+    X = X.type(torch.float32) #(300,2)
+    # X = X + torch.randn_like(X) * 0.01 #0.032376743853092194 / 0.027358490973711014
+    # X = X + torch.randn_like(X) * 0.02 #0.03258271887898445 / 0.021402189508080482
+    # X = X + torch.randn_like(X) * 0.03 #0.03309977054595947 / 0.018361151218414307
     t = t.type(torch.float32) #(300,1)
 
     # d = random.randint(0,240)
@@ -242,4 +242,6 @@ if __name__ == '__main__':
     X_pred = ode_trained(X[0], t, return_whole_sequence=True)
     plot_results(t, X_pred, X)
     print(loss_f(X_pred, X).item())
+    X_pred_test = ode_trained(X[240], t[240:,], return_whole_sequence=True)
+    print(loss_f(X_pred_test, X[240:,]).item())
     # writer.close()
