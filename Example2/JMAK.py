@@ -224,12 +224,10 @@ if __name__ == '__main__':
     x4 = torch.tensor(train['x4'].values).unsqueeze(1)
     training_data = torch.cat((t, x1, x2, x3, x4), 1)
     t, X = torch.split(training_data, [1,4], dim=1)
+    # X = X + torch.randn_like(X) * 0.01 # 0.004431675188243389
+    # X = X + torch.randn_like(X) * 0.02 # 0.0052552614361047745
+    # X = X + torch.randn_like(X) * 0.03 # 0.00930132158100605
     X = X.type(torch.float32) # 0.00045012799091637135 #(500,4)
-    # X = X + torch.randn_like(X) * 0.001 # 0.0010698663536459208
-    # X = X + torch.randn_like(X) * 0.005 # 0.004634083714336157
-    # X = X + torch.randn_like(X) * 0.01 # 0.004985711071640253
-    # X = X + torch.randn_like(X) * 0.02 # 0.008763163350522518
-    # X = X + torch.randn_like(X) * 0.03 # 0.01350489817559719
     t = t.type(torch.float32) #(500,1)
     X_train = X[0:450]
     t_train = t[0:450]
